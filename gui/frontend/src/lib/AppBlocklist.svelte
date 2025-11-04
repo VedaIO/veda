@@ -5,26 +5,42 @@
   interface BlockedApp {
     name: string;
     exe_path: string;
+    commercialName?: string; // Make optional as it will be loaded async
+    icon?: string; // Make optional as it will be loaded async
   }
-
-  let blocklistItems = writable<BlockedApp[]>([]);
-  let unblockStatus = writable('');
-
   // This array will hold the names of the currently selected checkboxes.
   // Svelte's `bind:group` directive will automatically keep this array in sync with the UI.
   let selectedApps: string[] = [];
+  let blocklistItems = writable<BlockedApp[]>([]);
 
-  // Fetches the app blocklist from the backend.
-  // It uses the `cache: 'no-cache'` option to prevent the browser from returning a stale list.
   async function loadBlocklist(): Promise<void> {
     const res = await fetch('/api/blocklist', { cache: 'no-cache' });
-    const data = await res.json();
+    const data: BlockedApp[] = await res.json();
+
     if (data && data.length > 0) {
       blocklistItems.set(data);
+
+      // Now, fetch the details for each app
+      const detailedItems = await Promise.all(
+        data.map(async (app) => {
+          if (app.exe_path) {
+            const appDetailsRes = await fetch(
+              `/api/app-details?path=${encodeURIComponent(app.exe_path)}`
+            );
+            if (appDetailsRes.ok) {
+              const appDetails = await appDetailsRes.json();
+              return { ...app, ...appDetails };
+            }
+          }
+          return app; // Return the original app if no path or if fetch fails
+        })
+      );
+      blocklistItems.set(detailedItems);
     } else {
       blocklistItems.set([]);
     }
   }
+  let unblockStatus = writable('');
 
   // Unblocks all applications that are currently selected in the UI.
   async function unblockSelected(): Promise<void> {
@@ -165,7 +181,17 @@
               value={app.name}
               bind:group={selectedApps}
             />
-            <span class="fw-bold me-2">{app.name}</span>
+            {#if app.icon}
+              <img
+                src="data:image/png;base64,{app.icon}"
+                class="me-2"
+                style="width: 24px; height: 24px;"
+                alt="App Icon"
+              />
+            {:else}
+              <div class="me-2" style="width: 24px; height: 24px;"></div>
+            {/if}
+            <span class="fw-bold me-2">{app.commercialName || app.name}</span>
           </label>
         {/each}
       {:else}
