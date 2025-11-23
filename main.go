@@ -26,8 +26,6 @@ const (
 	defaultPort = "58141"
 	// internalIPCPort is the port used for internal communication between ProcGuard components.
 	internalIPCPort = "58142"
-	// chromeExtensionID is the ID of the Chrome extension that communicates with the native messaging host.
-	chromeExtensionID = "ilaocldmkhlifnikhinkmiepekpbefoh"
 )
 
 // main is the entry point of the application. It uses command-line flags and arguments to determine
@@ -160,18 +158,6 @@ func startDaemonService(db *sql.DB) {
 
 // startGUIApplication handles the main startup logic for the GUI application.
 func startGUIApplication(db *sql.DB) {
-	exePath, err := os.Executable()
-	if err != nil {
-		data.GetLogger().Printf("Error getting executable path: %v", err)
-		// We can continue, but some features might not work.
-	}
-
-	// This setup is necessary for the browser extension to communicate with the application.
-	if err := web.InstallNativeHost(exePath, chromeExtensionID); err != nil {
-		data.GetLogger().Printf("Failed to install native messaging host: %v\n", err)
-		// This is not a fatal error, the application can still run without the extension.
-	}
-
 	guiAddress := "127.0.0.1:" + defaultPort
 	guiUrl := "http://" + guiAddress
 

@@ -6,6 +6,7 @@ require (
 	github.com/akavel/rsrc v0.10.2
 	github.com/bi-zone/go-fileversion v1.0.0
 	github.com/shirou/gopsutil/v3 v3.24.5
+	go.mozilla.org/pkcs7 v0.9.0
 	golang.org/x/crypto v0.24.0
 	golang.org/x/sys v0.37.0
 	modernc.org/sqlite v1.39.0

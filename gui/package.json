@@ -37,6 +37,7 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "bootstrap": "^5.3.8"
+    "bootstrap": "^5.3.8",
+    "flatpickr": "^4.6.13"
   }
 }

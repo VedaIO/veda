@@ -25,6 +25,18 @@
 
   import { checkExtension } from './lib/extensionStore';
 
+  async function handleStop() {
+    if (confirm('Bạn có chắc chắn muốn dừng ProcGuard không?')) {
+      try {
+        await fetch('/api/stop', { method: 'POST' });
+        alert('ProcGuard đã được dừng.');
+      } catch (error) {
+        console.error('Lỗi khi dừng ProcGuard:', error);
+        alert('Đã có lỗi xảy ra khi cố gắng dừng ProcGuard.');
+      }
+    }
+  }
+
   onMount(async () => {
     checkExtension();
     const res = await fetch('/api/is-authenticated');
@@ -74,6 +86,11 @@
           </li>
         </ul>
         <ul class="navbar-nav">
+          <li class="nav-item">
+            <button class="nav-link btn" on:click={handleStop}
+              >Dừng ProcGuard</button
+            >
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="/logout">Đăng xuất</a>
           </li>

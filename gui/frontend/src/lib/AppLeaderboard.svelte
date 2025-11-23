@@ -53,9 +53,9 @@
         <table class="table table-hover">
           <thead>
             <tr>
-              <th scope="col">Rank</th>
-              <th scope="col">Application</th>
-              <th scope="col">Usage Count</th>
+              <th scope="col">Xếp hạng</th>
+              <th scope="col">Ứng dụng</th>
+              <th scope="col">Số lần dùng</th>
             </tr>
           </thead>
           <tbody>

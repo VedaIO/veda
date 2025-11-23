@@ -200,6 +200,7 @@ func (srv *Server) registerRoutes(r *http.ServeMux) {
 	r.HandleFunc("/api/blocklist/load", srv.handleLoadAppBlocklist)
 	r.HandleFunc("/api/unblock", srv.handleUnblockApps)
 	r.HandleFunc("/api/uninstall", srv.handleUninstall)
+	r.HandleFunc("/api/stop", srv.handleStop)
 
 	// Leaderboard API routes
 	r.HandleFunc("/api/leaderboard/apps", srv.handleGetAppLeaderboard)

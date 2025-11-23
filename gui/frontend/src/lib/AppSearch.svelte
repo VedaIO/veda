@@ -3,6 +3,7 @@
   import { writable } from 'svelte/store';
   import SearchResultItem from './SearchResultItem.svelte';
   import { showToast } from './toastStore';
+  import DateRangePicker from './DateRangePicker.svelte';
 
   interface SearchResultItem {
     processName: string;
@@ -13,38 +14,26 @@
   }
 
   let q = '';
-  let sinceDate = '';
-  let sinceTime = '';
-  let untilDate = '';
-  let untilTime = '';
   let searchResults = writable<SearchResultItem[]>([]);
   let selectedApps: string[] = [];
+  let since: Date | null = null;
+  let until: Date | null = new Date();
 
-  async function search(range?: {
-    since: string;
-    until: string;
-  }): Promise<void> {
-    let since = '';
-    let until = '';
+  function formatDateTime(date: Date | null): string {
+    if (!date) return '';
+    return date.toISOString();
+  }
 
-    if (range) {
-      since = range.since;
-      until = range.until;
-    } else {
-      if (sinceDate && sinceTime) {
-        since = `${sinceDate}T${sinceTime}`;
-      }
-      if (untilDate && untilTime) {
-        until = `${untilDate}T${untilTime}`;
-      }
-    }
-
+  async function performSearch(
+    sinceStr: string,
+    untilStr: string
+  ): Promise<void> {
     let url = '/api/search?q=' + encodeURIComponent(q);
-    if (since) {
-      url += '&since=' + encodeURIComponent(since);
+    if (sinceStr) {
+      url += '&since=' + encodeURIComponent(sinceStr);
     }
-    if (until) {
-      url += '&until=' + encodeURIComponent(until);
+    if (untilStr) {
+      url += '&until=' + encodeURIComponent(untilStr);
     }
     const res = await fetch(url, { cache: 'no-cache' });
     const data = await res.json();
@@ -84,6 +73,14 @@
     }
   }
 
+  function handleDateChange(
+    event: CustomEvent<{ since: Date | null; until: Date | null }>
+  ) {
+    since = event.detail.since;
+    until = event.detail.until;
+    performSearch(formatDateTime(since), formatDateTime(until));
+  }
+
   async function block(): Promise<void> {
     if (selectedApps.length === 0) {
       showToast(
@@ -93,7 +90,6 @@
       return;
     }
 
-    // Remove duplicates
     const uniqueApps = [...new Set(selectedApps)];
 
     const response = await fetch('/api/block', {
@@ -108,21 +104,14 @@
     }
 
     showToast(`Đã chặn: ${uniqueApps.join(', ')}`, 'success');
-    selectedApps = []; // Clear selection
+    selectedApps = [];
   }
 
   onMount(() => {
-    // Set default dates
     const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
-    sinceDate = today;
-    untilDate = today;
-
-    // Perform initial search
-    search();
+    since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0);
+    until = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59);
+    performSearch(formatDateTime(since), formatDateTime(until));
   });
 </script>
 
@@ -136,10 +125,9 @@
         id="q"
         placeholder="Nhập tên ứng dụng..."
         bind:value={q}
+        on:input={() =>
+          performSearch(formatDateTime(since), formatDateTime(until))}
       />
-      <button class="btn btn-primary" type="button" on:click={search}>
-        Tìm kiếm
-      </button>
       <button class="btn btn-danger" type="button" on:click={block}>
         Chặn mục đã chọn
       </button>
@@ -147,79 +135,34 @@
 
     <div class="card mt-3">
       <div class="card-header d-flex align-items-center">
-        <span class="me-3">Lọc theo thời gian:</span>
+        <span class="me-3">Lọc theo thời gian định sẵn:</span>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() => search({ since: '1 hour ago', until: 'now' })}
+            on:click={() => performSearch('1 hour ago', 'now')}
           >
             1 giờ qua
           </button>
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() => search({ since: '24 hours ago', until: 'now' })}
+            on:click={() => performSearch('24 hours ago', 'now')}
           >
             24 giờ qua
           </button>
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() => search({ since: '7 days ago', until: 'now' })}
+            on:click={() => performSearch('7 days ago', 'now')}
           >
             7 ngày qua
           </button>
         </div>
       </div>
       <div class="card-body">
-        <div class="row g-3 align-items-center">
-          <div class="col-auto">
-            <label class="col-form-label" for="since_date_input">Từ:</label>
-          </div>
-          <div class="col-auto">
-            <input
-              type="date"
-              class="form-control"
-              id="since_date_input"
-              bind:value={sinceDate}
-            />
-          </div>
-          <div class="col-auto">
-            <input
-              type="time"
-              class="form-control"
-              id="since_time_input"
-              bind:value={sinceTime}
-              step="60"
-            />
-          </div>
-          <div class="col-auto">
-            <label class="col-form-label" for="until_date_input">Đến:</label>
-          </div>
-          <div class="col-auto">
-            <input
-              type="date"
-              class="form-control"
-              id="until_date_input"
-              bind:value={untilDate}
-            />
-          </div>
-          <div class="col-auto">
-            <input
-              type="time"
-              class="form-control"
-              id="until_time_input"
-              bind:value={untilTime}
-              step="60"
-            />
-          </div>
-          <div class="col-auto">
-            <button class="btn btn-primary" on:click={search}>
-              Xác nhận
-            </button>
-          </div>
-        </div>
+        <span class="me-3">Lọc theo thời gian bất kỳ:</span>
+        <DateRangePicker {since} {until} on:change={handleDateChange} />
       </div>
     </div>
 

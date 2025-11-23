@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import { showToast } from './toastStore';
+  import DateRangePicker from './DateRangePicker.svelte';
 
   interface WebLogItem {
     timestamp: string;
@@ -12,41 +13,26 @@
   }
 
   let webLogItems = writable<WebLogItem[]>([]);
-  let webSinceDate = '';
-  let webSinceTime = '';
-  let webUntilDate = '';
-  let webUntilTime = '';
+  let since: Date | null = null;
+  let until: Date | null = new Date();
 
-  async function searchWebLogs(range?: {
-    since: string;
-    until: string;
-  }): Promise<void> {
-    let since = '';
-    let until = '';
-
-    if (range) {
-      since = range.since;
-      until = range.until;
-    } else {
-      if (webSinceDate && webSinceTime) {
-        since = `${webSinceDate}T${webSinceTime}`;
-      }
-      if (webUntilDate && webUntilTime) {
-        until = `${webUntilDate}T${webUntilTime}`;
-      }
-    }
-    await loadWebLogs(since, until);
+  function formatDateTime(date: Date | null): string {
+    if (!date) return '';
+    return date.toISOString();
   }
 
-  async function loadWebLogs(since = '', until = ''): Promise<void> {
+  async function loadWebLogs(
+    sinceStr: string,
+    untilStr: string
+  ): Promise<void> {
     let url = '/api/web-logs';
     // eslint-disable-next-line svelte/prefer-svelte-reactivity
     const params = new URLSearchParams();
-    if (since) {
-      params.append('since', since);
+    if (sinceStr) {
+      params.append('since', sinceStr);
     }
-    if (until) {
-      params.append('until', until);
+    if (untilStr) {
+      params.append('until', untilStr);
     }
     const queryString = params.toString();
     if (queryString) {
@@ -80,7 +66,7 @@
             }
           }
 
-          const timestamp = l[0]; // Just the timestamp
+          const timestamp = l[0];
 
           return {
             timestamp,
@@ -95,6 +81,14 @@
     } else {
       webLogItems.set([]);
     }
+  }
+
+  function handleDateChange(
+    event: CustomEvent<{ since: Date | null; until: Date | null }>
+  ) {
+    since = event.detail.since;
+    until = event.detail.until;
+    loadWebLogs(formatDateTime(since), formatDateTime(until));
   }
 
   async function blockSelectedWebsites(): Promise<void> {
@@ -120,7 +114,6 @@
       'Các trang web đã chọn đã được thêm vào danh sách chặn.',
       'success'
     );
-    // Uncheck all boxes
     (
       document.querySelectorAll(
         'input[name="web-log-domain"]:checked'
@@ -129,16 +122,10 @@
   }
 
   onMount(() => {
-    // Set default dates
     const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
-    webSinceDate = today;
-    webUntilDate = today;
-
-    loadWebLogs();
+    since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0);
+    until = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59);
+    loadWebLogs(formatDateTime(since), formatDateTime(until));
   });
 </script>
 
@@ -153,83 +140,34 @@
 
     <div class="card mt-3">
       <div class="card-header d-flex align-items-center">
-        <span class="me-3">Lọc theo thời gian:</span>
+        <span class="me-3">Lọc theo thời gian định sẵn:</span>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() =>
-              searchWebLogs({ since: '1 hour ago', until: 'now' })}
+            on:click={() => loadWebLogs('1 hour ago', 'now')}
           >
             1 giờ qua
           </button>
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() =>
-              searchWebLogs({ since: '24 hours ago', until: 'now' })}
+            on:click={() => loadWebLogs('24 hours ago', 'now')}
           >
             24 giờ qua
           </button>
           <button
             type="button"
             class="btn btn-outline-secondary"
-            on:click={() =>
-              searchWebLogs({ since: '7 days ago', until: 'now' })}
+            on:click={() => loadWebLogs('7 days ago', 'now')}
           >
             7 ngày qua
           </button>
         </div>
       </div>
       <div class="card-body">
-        <div class="row g-3 align-items-center">
-          <div class="col-auto">
-            <label class="col-form-label" for="web_since_date_input">Từ:</label>
-          </div>
-          <div class="col-auto">
-            <input
-              type="date"
-              class="form-control"
-              id="web_since_date_input"
-              bind:value={webSinceDate}
-            />
-          </div>
-          <div class="col-auto">
-            <input
-              type="time"
-              class="form-control"
-              id="web_since_time_input"
-              bind:value={webSinceTime}
-              step="60"
-            />
-          </div>
-          <div class="col-auto">
-            <label class="col-form-label" for="web_until_date_input">Đến:</label
-            >
-          </div>
-          <div class="col-auto">
-            <input
-              type="date"
-              class="form-control"
-              id="web_until_date_input"
-              bind:value={webUntilDate}
-            />
-          </div>
-          <div class="col-auto">
-            <input
-              type="time"
-              class="form-control"
-              id="web_until_time_input"
-              bind:value={webUntilTime}
-              step="60"
-            />
-          </div>
-          <div class="col-auto">
-            <button class="btn btn-primary" on:click={searchWebLogs}>
-              Xác nhận
-            </button>
-          </div>
-        </div>
+        <span class="me-3">Lọc theo thời gian bất kỳ:</span>
+        <DateRangePicker {since} {until} on:change={handleDateChange} />
       </div>
     </div>
 

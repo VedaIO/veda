@@ -54,9 +54,9 @@
         <table class="table table-hover">
           <thead>
             <tr>
-              <th scope="col">Rank</th>
-              <th scope="col">Website</th>
-              <th scope="col">Visit Count</th>
+              <th scope="col">Xếp hạng</th>
+              <th scope="col">Trang Web</th>
+              <th scope="col">Số lần mở</th>
             </tr>
           </thead>
           <tbody>

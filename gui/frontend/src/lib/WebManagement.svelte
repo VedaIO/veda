@@ -3,7 +3,6 @@
   import WebLeaderboard from './WebLeaderboard.svelte';
   import WebLog from './WebLog.svelte';
   import WebBlocklist from './WebBlocklist.svelte';
-  import { showToast } from './toastStore';
 
   let activeTab: 'leaderboard' | 'log' | 'blocklist' = 'leaderboard';
 
@@ -28,9 +27,9 @@
             class="btn btn-primary"
             id="install-extension-btn-web"
             on:click={() =>
-              showToast(
-                'Vui lòng chờ tiện ích khả dụng trên cửa hàng.',
-                'info'
+              window.open(
+                'https://chromewebstore.google.com/detail/procguard-web-monitor/hkanepohpflociaodcicmmfbdaohpceo',
+                '_blank'
               )}>Tải tiện ích</button
           >
           <button

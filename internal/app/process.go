@@ -2,6 +2,10 @@ package app
 
 import (
 	"database/sql"
+	"debug/pe"
+	"fmt"
+	"io"
+	"os"
 	"procguard/internal/data"
 	"slices"
 	"strings"
@@ -10,6 +14,7 @@ import (
 	"unsafe"
 
 	"github.com/shirou/gopsutil/v3/process"
+	"go.mozilla.org/pkcs7"
 )
 
 const (
@@ -60,9 +65,7 @@ func hasVisibleWindow(pid uint32) bool {
 // StartProcessEventLogger starts a long-running goroutine that monitors process creation and termination events.
 func StartProcessEventLogger(appLogger data.Logger, db *sql.DB) {
 	go func() {
-		// runningProcs stores the PIDs of processes we are currently tracking.
 		runningProcs := make(map[int32]bool)
-		// Initialize the map with currently running processes that should be tracked.
 		initializeRunningProcs(runningProcs, db)
 
 		ticker := time.NewTicker(processCheckInterval)
@@ -86,22 +89,18 @@ func StartProcessEventLogger(appLogger data.Logger, db *sql.DB) {
 	}()
 }
 
-// logEndedProcesses checks for processes that have terminated and updates their end time in the database.
 func logEndedProcesses(appLogger data.Logger, db *sql.DB, runningProcs, currentProcs map[int32]bool) {
 	for pid := range runningProcs {
 		if !currentProcs[pid] {
-			// Process has ended. Update its end_time in the DB.
 			data.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE pid = ? AND end_time IS NULL", time.Now().Unix(), pid)
 			delete(runningProcs, pid)
 		}
 	}
 }
 
-// logNewProcesses checks for new processes and logs them to the database if they should be tracked.
 func logNewProcesses(appLogger data.Logger, db *sql.DB, runningProcs map[int32]bool, procs []*process.Process) {
 	for _, p := range procs {
 		if !runningProcs[p.Pid] {
-			// This is a new process. Check if we should log it.
 			if shouldLogProcess(p) {
 				name, _ := p.Name()
 				parent, _ := p.Parent()
@@ -122,8 +121,81 @@ func logNewProcesses(appLogger data.Logger, db *sql.DB, runningProcs map[int32]b
 	}
 }
 
-// initializeRunningProcs pre-populates the runningProcs map with processes
-// that are already in the database without an end_time.
+func getPublisherName(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("error opening file %s: %w", filePath, err)
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			data.GetLogger().Printf("Failed to close file %s: %v", filePath, err)
+		}
+	}()
+
+	peFile, err := pe.NewFile(file)
+	if err != nil {
+		return "", fmt.Errorf("error parsing PE file %s: %w", filePath, err)
+	}
+
+	var securityDir pe.DataDirectory
+	switch oh := peFile.OptionalHeader.(type) {
+	case *pe.OptionalHeader32:
+		securityDir = oh.DataDirectory[pe.IMAGE_DIRECTORY_ENTRY_SECURITY]
+	case *pe.OptionalHeader64:
+		securityDir = oh.DataDirectory[pe.IMAGE_DIRECTORY_ENTRY_SECURITY]
+	default:
+		return "", fmt.Errorf("unsupported PE optional header type: %T", peFile.OptionalHeader)
+	}
+
+	if securityDir.Size == 0 {
+		return "", fmt.Errorf("no security directory found")
+	}
+
+	pkcs7Offset := int64(securityDir.VirtualAddress + 8)
+	pkcs7Size := int64(securityDir.Size - 8)
+
+	if pkcs7Size <= 0 {
+		return "", fmt.Errorf("invalid signature size")
+	}
+
+	signatureBytes := make([]byte, pkcs7Size)
+	_, err = file.ReadAt(signatureBytes, pkcs7Offset)
+	if err != nil && err != io.EOF {
+		return "", fmt.Errorf("error reading signature from file: %w", err)
+	}
+
+	p7, err := pkcs7.Parse(signatureBytes)
+	if err != nil {
+		return "", fmt.Errorf("error parsing PKCS#7 signature: %w", err)
+	}
+
+	if len(p7.Certificates) == 0 {
+		return "", fmt.Errorf("no certificates found in signature")
+	}
+
+	for _, cert := range p7.Certificates {
+		if len(cert.Subject.Organization) > 0 {
+			return cert.Subject.Organization[0], nil
+		}
+	}
+
+	return "", fmt.Errorf("no organization name found in any certificate")
+}
+
+func isMicrosoftProcess(p *process.Process) bool {
+	exePath, err := p.Exe()
+	if err != nil {
+		return false
+	}
+
+	publisher, err := getPublisherName(exePath)
+	if err != nil {
+		return false
+	}
+
+	return strings.Contains(publisher, "Microsoft")
+}
+
 func initializeRunningProcs(runningProcs map[int32]bool, db *sql.DB) {
 	rows, err := db.Query("SELECT pid FROM app_events WHERE end_time IS NULL")
 	if err != nil {
@@ -138,19 +210,15 @@ func initializeRunningProcs(runningProcs map[int32]bool, db *sql.DB) {
 	for rows.Next() {
 		var pid int32
 		if err := rows.Scan(&pid); err == nil {
-			// Verify the process is still running
 			if exists, _ := process.PidExists(pid); exists {
 				runningProcs[pid] = true
 			} else {
-				// Process is not running, so it should have been marked as ended.
-				// This handles cases where the daemon was stopped abruptly.
 				data.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE pid = ? AND end_time IS NULL", time.Now().Unix(), pid)
 			}
 		}
 	}
 }
 
-// StartBlocklistEnforcer starts a long-running goroutine that periodically checks for and kills blocked processes.
 func StartBlocklistEnforcer(appLogger data.Logger) {
 	go func() {
 		killTick := time.NewTicker(blocklistEnforceInterval)
@@ -172,10 +240,9 @@ func StartBlocklistEnforcer(appLogger data.Logger) {
 			for _, p := range procs {
 				name, _ := p.Name()
 				if name == "" {
-					continue // Skip processes with no name
+					continue
 				}
 
-				// Enforce the blocklist by killing any process whose name is in the list.
 				if slices.Contains(list, strings.ToLower(name)) {
 					err := p.Kill()
 					if err != nil {
@@ -189,46 +256,37 @@ func StartBlocklistEnforcer(appLogger data.Logger) {
 	}()
 }
 
-// shouldLogProcess determines if a process should be logged based on a set of heuristics
-// designed to filter out system and other irrelevant processes.
 func shouldLogProcess(p *process.Process) bool {
 	name, err := p.Name()
 	if err != nil || name == "" {
-		return false // Skip processes with no name
-	}
-
-	// Do not log the ProcGuard process itself or other ignored processes.
-	if IsIgnored(name, DefaultWindows) || IsIgnored(name, []string{"ProcGuardSvc.exe"}) {
 		return false
 	}
 
-	// Log if it has a visible window.
+	if name == "ProcGuardSvc.exe" {
+		return false
+	}
+
+	if isMicrosoftProcess(p) {
+		return false
+	}
+
 	if hasVisibleWindow(uint32(p.Pid)) {
 		return true
 	}
 
-	// If it doesn't have a window, check its integrity level.
 	il, err := GetProcessIntegrityLevel(uint32(p.Pid))
-	if err == nil && il >= SECURITY_MANDATORY_SYSTEM_RID {
-		return false // Skip system and high integrity processes.
+	if err == nil && il >= SECURITY_MANDATORY_HIGH_RID {
+		return false
 	}
 
 	parent, err := p.Parent()
 	if err != nil {
-		// No parent and no window, could be a standalone background task. Log it.
 		return true
 	}
 
-	parentName, err := parent.Name()
-	if err != nil {
-		return true // Can't get parent name, assume it's a top-level process.
-	}
-
-	// If the parent is a known system process, don't log the child.
-	if IsIgnored(parentName, DefaultWindows) {
+	if isMicrosoftProcess(parent) {
 		return false
 	}
 
-	// By default, do not log child processes without a visible window.
 	return false
 }
