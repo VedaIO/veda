@@ -28,9 +28,9 @@
             class="btn btn-primary"
             id="install-extension-btn-web"
             on:click={() =>
-              showToast(
-                'Vui lòng chờ tiện ích khả dụng trên cửa hàng.',
-                'info'
+              window.open(
+                'https://chromewebstore.google.com/detail/procguard-web-monitor/hkanepohpflociaodcicmmfbdaohpceo',
+                '_blank'
               )}>Tải tiện ích</button
           >
           <button
