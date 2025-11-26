@@ -128,8 +128,8 @@
 
   onMount(() => {
     const now = new Date();
-    since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0);
-    until = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59);
+    since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+    until = new Date();
     loadWebLogs(q, formatDateTime(since), formatDateTime(until));
   });
 </script>

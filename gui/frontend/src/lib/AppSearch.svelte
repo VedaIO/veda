@@ -103,14 +103,17 @@
       return;
     }
 
-    showToast(`Các ứng dụng đã chọn đã được thêm vào danh sách chặn`, 'success');
+    showToast(
+      `Các ứng dụng đã chọn đã được thêm vào danh sách chặn`,
+      'success'
+    );
     selectedApps = [];
   }
 
   onMount(() => {
     const now = new Date();
-    since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0);
-    until = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59);
+    since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+    until = new Date();
     performSearch(formatDateTime(since), formatDateTime(until));
   });
 </script>
