@@ -1,11 +1,18 @@
+# Wails
+wailsjs/
+build/bin/
+dist/
+/procguard-wails
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Flake
+
 .direnv/
-*.drv
-*.nix.d/
-rsrc.syso
-ProcGuardSvc.exe
-todo.md
-idea.md
-fix.md
-.venv/
-node_modules
-gui/frontend/dist
