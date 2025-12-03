@@ -7,6 +7,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"wails-app/internal/native/selfprotect"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,12 +28,14 @@ var assets embed.FS
 // The context is saved so we can call runtime methods (WindowShow, etc.) later
 //
 // Responsibilities:
+//  0. Protect ProcGuard from unauthorized termination
 //  1. Save the Wails runtime context for later use
 //  2. Initialize the database
 //  3. Initialize the logger
 //  4. Create the API server
 //  5. Start the background daemon for process/web monitoring
 //  6. Start the native messaging host for Chrome extension communication
+
 func (a *App) startup(ctx context.Context) {
 	// Save context - CRITICAL for calling ShowWindow() and other runtime methods
 	a.ctx = ctx
@@ -80,6 +83,11 @@ func main() {
 
 	log.Printf("=== PROCGUARD LAUNCHED === Args: %v", os.Args)
 	log.Printf("CWD: %v", func() string { wd, _ := os.Getwd(); return wd }())
+
+	// Protect process from unauthorized termination (Task Manager kill, etc.)
+	if err := selfprotect.ProtectProcess(); err != nil {
+		log.Printf("Warning: Could not protect process: %v", err)
+	}
 
 	// MODE 1: NATIVE MESSAGING HOST
 	// Chrome launches us with the extension ID as an argument: chrome-extension://...

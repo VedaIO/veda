@@ -232,6 +232,7 @@
     color: #ffffff;
     user-select: none;
     -webkit-user-select: none;
+    cursor: default;
   }
 
   .app-container {

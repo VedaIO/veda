@@ -104,26 +104,6 @@ CGO + Zig Modules (New)
 └─ Network Filter Driver (optional)
 ```
 
-## Getting Started with CGO
-
-### Prerequisites:
-1. Install Zig
-2. Install Windows SDK (for headers)
-3. Setup CGO environment: `set CGO_ENABLED=1`
-
-### Example CGO Module:
-```bash
-# Create new module
-cd procguard/internal/native
-go mod init github.com/yourusername/procguard/internal/native
-
-# Create C wrapper
-# native.go, native.c, native.h
-
-# Build
-go build -buildmode=c-shared -o procguard-native.dll
-```
-
 ## Testing & Quality
 
 Each feature document includes:

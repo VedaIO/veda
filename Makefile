@@ -11,11 +11,13 @@ all: build
 
 build:
 	@echo "Building ProcGuard for windows..."
-	cd wails-app && wails build -platform windows/amd64 -ldflags="-w -X main.version=$(VERSION) -H windowsgui"
+	cd wails-app/frontend && npm run build
+	cd wails-app && CGO_ENABLED=1 CC="zig cc -target x86_64-windows-gnu" GOOS=windows GOARCH=amd64 go build -tags desktop,production -ldflags="-w -s -X main.version=$(VERSION) -H windowsgui" -o build/bin/ProcGuard.exe
 
 build-debug:
-	@echo "Building ProcGuard for windows..."
-	cd wails-app && wails build -platform windows/amd64 -debug
+	@echo "Building ProcGuard for windows (debug)..."
+	cd wails-app/frontend && npm run build
+	cd wails-app && CGO_ENABLED=1 CC="zig cc -target x86_64-windows-gnu" GOOS=windows GOARCH=amd64 go build -tags desktop,production -ldflags="-X main.version=$(VERSION)" -o build/bin/ProcGuard.exe
 
 fmt:
 	@echo "Formatting code..."
