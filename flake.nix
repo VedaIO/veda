@@ -13,7 +13,6 @@
       buildInputs = with pkgs; [
         go
         golangci-lint
-        wails
         gnumake
         bun
         zig
