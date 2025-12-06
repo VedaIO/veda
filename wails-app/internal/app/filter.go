@@ -1,9 +1,9 @@
-//go:build windows
-
 package app
 
 import (
 	"strings"
+	"wails-app/internal/platform/executable"
+	"wails-app/internal/platform/integrity"
 
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -28,15 +28,15 @@ func ShouldTrackApp(exePath string, proc *process.Process) bool {
 
 	// Rule 2: Skip processes with "Microsoft® Windows® Operating System" product name
 	// This catches ApplicationFrameHost, SystemSettings, and other UWP system components
-	productName, err := getProductName(exePath)
+	productName, err := executable.GetProductName(exePath)
 	if err == nil && strings.Contains(productName, "Microsoft® Windows® Operating System") {
 		return false
 	}
 
 	// Rule 3: Skip system integrity level processes (system services)
 	if proc != nil {
-		il, err := GetProcessIntegrityLevel(uint32(proc.Pid))
-		if err == nil && il >= SECURITY_MANDATORY_SYSTEM_RID {
+		il, err := integrity.GetProcessLevel(uint32(proc.Pid))
+		if err == nil && il >= integrity.SystemRID {
 			return false
 		}
 	}
@@ -52,7 +52,7 @@ func ShouldTrackAppStrict(exePath string, proc *process.Process) bool {
 	}
 
 	// Additional: Skip all Microsoft-signed processes
-	if proc != nil && isMicrosoftProcess(proc) {
+	if executable.IsMicrosoftSigned(exePath) {
 		return false
 	}
 

@@ -5,7 +5,7 @@ package api
 import (
 	"path/filepath"
 	"strings"
-	"wails-app/internal/app"
+	"wails-app/internal/platform/icon"
 
 	"github.com/bi-zone/go-fileversion"
 )
@@ -31,22 +31,22 @@ func (srv *Server) getAppDetails(exePath string) (string, string) {
 	}
 
 	srv.iconCacheMu.Lock()
-	icon, ok := srv.iconCache[exePath]
+	iconBase64, ok := srv.iconCache[exePath]
 	srv.iconCacheMu.Unlock()
 	if ok {
-		return commercialName, icon
+		return commercialName, iconBase64
 	}
 
 	// Get the application's icon as a base64-encoded string.
-	icon, err = app.GetAppIconAsBase64(exePath)
+	iconBase64, err = icon.GetAppIconAsBase64(exePath)
 	if err != nil {
 		// Log the error but don't fail the request, as the icon is not critical.
 		srv.Logger.Printf("Failed to get icon for %s: %v", exePath, err)
 	}
 
 	srv.iconCacheMu.Lock()
-	srv.iconCache[exePath] = icon
+	srv.iconCache[exePath] = iconBase64
 	srv.iconCacheMu.Unlock()
 
-	return commercialName, icon
+	return commercialName, iconBase64
 }
