@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"wails-app/internal/app"
 	"wails-app/internal/auth"
+	"wails-app/internal/config"
 	"wails-app/internal/data"
 	"wails-app/internal/platform/autostart"
 )
 
 // GetAutostartStatus returns the current status of the autostart setting.
 func (s *Server) GetAutostartStatus() (bool, error) {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return false, err
 	}
@@ -31,7 +32,7 @@ func (s *Server) DisableAutostart() error {
 // ClearAppHistory removes all application usage logs and screen time data.
 // This is irreversible and requires the user password.
 func (s *Server) ClearAppHistory(password string) error {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func (s *Server) ClearAppHistory(password string) error {
 // ClearWebHistory removes all web browsing logs and cached website metadata.
 // This is irreversible and requires the user password.
 func (s *Server) ClearWebHistory(password string) error {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return err
 	}

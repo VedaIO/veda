@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"wails-app/internal/auth"
-	"wails-app/internal/data"
+	"wails-app/internal/config"
 )
 
 // GetIsAuthenticated checks if the user is authenticated.
@@ -22,7 +22,7 @@ func (s *Server) Logout() {
 
 // HasPassword checks if a password has been set for the application.
 func (s *Server) HasPassword() (bool, error) {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return false, err
 	}
@@ -31,7 +31,7 @@ func (s *Server) HasPassword() (bool, error) {
 
 // Login handles the user login.
 func (s *Server) Login(password string) (bool, error) {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return false, err
 	}
@@ -47,7 +47,7 @@ func (s *Server) Login(password string) (bool, error) {
 
 // SetPassword handles the initial password setup.
 func (s *Server) SetPassword(password string) error {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return err
 	}

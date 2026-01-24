@@ -6,6 +6,7 @@ import (
 	"strings"
 	"wails-app/internal/app"
 	"wails-app/internal/auth"
+	"wails-app/internal/config"
 	"wails-app/internal/data"
 	"wails-app/internal/platform/autostart"
 	"wails-app/internal/platform/nativehost"
@@ -19,7 +20,7 @@ const appName = "ProcGuard"
 // Uninstall handles the uninstallation of the application.
 // It performs a series of cleanup tasks in a separate goroutine and then initiates a self-deletion process.
 func (s *Server) Uninstall(password string) error {
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		return err
 	}

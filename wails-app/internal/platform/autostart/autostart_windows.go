@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"wails-app/internal/config"
 	"wails-app/internal/data"
 
 	"golang.org/x/sys/windows/registry"
@@ -51,7 +52,7 @@ func EnsureAutostart() (string, error) {
 
 	// Update the config file to reflect the change in autostart status.
 	// This ensures the application's internal state matches the system's autostart configuration.
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to load config to update autostart status:", err)
 	} else {
@@ -85,7 +86,7 @@ func RemoveAutostart() error {
 	}
 
 	// Update the config file to reflect the change in autostart status.
-	cfg, err := data.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to load config to update autostart status:", err)
 	} else {
