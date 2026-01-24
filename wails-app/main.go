@@ -14,6 +14,7 @@ import (
 	"wails-app/api"
 	"wails-app/internal/daemon"
 	"wails-app/internal/data"
+	"wails-app/internal/data/logger"
 	"wails-app/internal/platform/nativehost"
 	"wails-app/internal/web"
 )
@@ -46,7 +47,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 
 	// Initialize logger with database
-	data.NewLogger(db)
+	logger.NewLogger(db)
 
 	// Create API server with database connection
 	a.Server = api.NewServer(db)

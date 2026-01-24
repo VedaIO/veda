@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-	"wails-app/internal/data"
+	"wails-app/internal/data/logger"
 )
 
 // SearchAppEvents performs a search on the app_events table in the database.
@@ -64,7 +64,7 @@ func SearchAppEvents(db *sql.DB, query, since, until string) ([][]string, error)
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			data.GetLogger().Printf("Failed to close rows: %v", err)
+			logger.GetLogger().Printf("Failed to close rows: %v", err)
 		}
 	}()
 

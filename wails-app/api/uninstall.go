@@ -8,6 +8,7 @@ import (
 	"wails-app/internal/auth"
 	"wails-app/internal/config"
 	"wails-app/internal/data"
+	"wails-app/internal/data/logger"
 	"wails-app/internal/platform/autostart"
 	"wails-app/internal/platform/nativehost"
 	"wails-app/internal/platform/uninstall"
@@ -103,7 +104,7 @@ func unblockAll() error {
 			newName := strings.TrimSuffix(name, ".blocked")
 			if err := os.Rename(name, newName); err != nil {
 				// Log the error but continue trying to unblock other files.
-				data.GetLogger().Printf("Failed to unblock file %s: %v", name, err)
+				logger.GetLogger().Printf("Failed to unblock file %s: %v", name, err)
 			}
 		}
 	}

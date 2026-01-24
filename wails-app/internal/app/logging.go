@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"wails-app/internal/data"
+	"wails-app/internal/data/logger"
 	"wails-app/internal/data/write"
 	"wails-app/internal/platform/executable"
 	"wails-app/internal/platform/integrity"
@@ -32,7 +33,7 @@ func ResetLoggedApps() {
 }
 
 // StartProcessEventLogger starts a long-running goroutine that monitors process creation and termination events.
-func StartProcessEventLogger(appLogger data.Logger, db *sql.DB) {
+func StartProcessEventLogger(appLogger logger.Logger, db *sql.DB) {
 	go func() {
 		runningProcs := make(map[int32]bool)
 		initializeRunningProcs(runningProcs, db)
@@ -117,7 +118,7 @@ func initializeRunningProcs(runningProcs map[int32]bool, db *sql.DB) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			data.GetLogger().Printf("Failed to close rows: %v", err)
+			logger.GetLogger().Printf("Failed to close rows: %v", err)
 		}
 	}()
 

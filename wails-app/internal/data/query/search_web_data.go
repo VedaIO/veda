@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 	"wails-app/internal/data"
+	"wails-app/internal/data/logger"
 )
 
 // GetWebLogs retrieves web logs from the database within a given time range.
@@ -54,7 +55,7 @@ func GetWebLogs(db *sql.DB, query, since, until string) ([][]string, error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			data.GetLogger().Printf("Failed to close rows: %v", err)
+			logger.GetLogger().Printf("Failed to close rows: %v", err)
 		}
 	}()
 
