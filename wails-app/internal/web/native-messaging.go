@@ -12,8 +12,8 @@ import (
 	"runtime/debug"
 	"time"
 	"wails-app/internal/data"
-	"wails-app/internal/data/write"
 	"wails-app/internal/data/query"
+	"wails-app/internal/data/write"
 )
 
 const (
