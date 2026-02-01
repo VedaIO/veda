@@ -19,6 +19,10 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
 
+      - name: Install Wails
+        run: |
+          nix develop --command bash -c "go install github.com/wailsapp/wails/v2/cmd/wails@latest"
+
       - name: Build Binary
         run: |
           nix develop --command bash -c "cd wails-app && make build VERSION=${{ github.ref_name }}"
