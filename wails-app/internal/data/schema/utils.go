@@ -10,8 +10,7 @@ func CreateSchema(db *sql.DB) error {
 		return err
 	}
 
-	// Migration: Ensure process_instance_key exists for existing databases.
-	// We ignore the error because it will fail if the column already exists.
+	// Ensure process_instance_key column exists.
 	_, _ = db.Exec("ALTER TABLE app_events ADD COLUMN process_instance_key TEXT")
 
 	return nil

@@ -76,9 +76,7 @@ func logEndedProcesses(state *loggerState, currentKeys map[string]bool) {
 
 	for key, nameLower := range state.runningProcs {
 		if !currentKeys[key] {
-			// We use the UniqueKey (PID-StartTimeNano) stored in process_instance_key to identify the row.
-			// Note: For backward compatibility with very old rows (no key), we might need a fallback,
-			// but for this fix we assume rows created since this update have the key.
+			// process_instance_key (PID-StartTimeNano) is used to uniquely identify the session row.
 			write.EnqueueWrite("UPDATE app_events SET end_time = ? WHERE process_instance_key = ? AND end_time IS NULL",
 				time.Now().Unix(), key)
 
@@ -134,8 +132,7 @@ func logNewProcesses(state *loggerState, appLogger logger.Logger, procs []proc_s
 		// Success: Log it
 		parentName := fmt.Sprintf("PID: %d", p.ParentPID)
 
-		// KEY FIX: We store time.Now().Unix() in start_time for UI compatibility (Seconds).
-		// We store p.UniqueKey() in process_instance_key for precise tracking.
+		// Store a standard Unix timestamp for display and the high-precision UniqueKey for process identity.
 		write.EnqueueWrite("INSERT INTO app_events (process_name, pid, parent_process_name, exe_path, start_time, process_instance_key) VALUES (?, ?, ?, ?, ?, ?)",
 			name, p.PID, parentName, exePath, time.Now().Unix(), key)
 

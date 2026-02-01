@@ -59,8 +59,7 @@ func trackForegroundWindow(appLogger logger.Logger, state *ScreenTimeState) {
 		return
 	}
 
-	// Resolve the PID to a specific process instance using our targeted sensing layer.
-	// This is MUCH faster than GetAllProcesses() as it avoids a full system snapshot.
+	// Use targeted sensing for the specific foreground PID to minimize system overhead.
 	activeProc, err := proc_sensing.GetProcessByPID(info.PID)
 	if err != nil {
 		return
@@ -74,9 +73,8 @@ func trackForegroundWindow(appLogger logger.Logger, state *ScreenTimeState) {
 		return
 	}
 
-	// Check if the user is still in the same process instance as the last check.
-	// We no longer check for title changes ("Tab Bloat" fix).
-	// This definitively handles PID recycling.
+	// track based on unique process instance identity.
+	// We aggregate by executable path to avoid redundant entries when window titles change.
 	if uniqueKey == state.LastUniqueKey {
 		// Same app: increment the memory buffer. We don't write to DB yet.
 		state.PendingDuration++
@@ -86,7 +84,7 @@ func trackForegroundWindow(appLogger logger.Logger, state *ScreenTimeState) {
 			flushScreenTime(appLogger, state.LastExePath, state.PendingDuration)
 		}
 
-		// SMART AGGREGATION: Update recent existing record for this app.
+		// Update existing record for this app if it was recently active, otherwise create a new one.
 		now := time.Now().Unix()
 		appLogger.Printf("[Screentime] Focus shifted to: %s", exePath)
 
