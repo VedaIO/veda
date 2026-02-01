@@ -51,7 +51,6 @@ const AppSchema = `
 	CREATE TABLE IF NOT EXISTS screen_time (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		executable_path TEXT,
-		window_title TEXT,
 		timestamp INTEGER NOT NULL,
 		duration_seconds INTEGER DEFAULT 1
 	);

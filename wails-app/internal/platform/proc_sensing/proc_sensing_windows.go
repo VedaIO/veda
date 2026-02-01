@@ -87,9 +87,39 @@ static inline ProcGuard_ProcessList CaptureProcessSnapshot() {
 static inline void FreeProcessSnapshot(ProcGuard_ProcessList list) {
     if (list.processes) free(list.processes);
 }
+
+// GetProcessInfoByPID fetches high-precision info for a single PID without a full snapshot.
+static inline ProcGuard_ProcessInfo GetProcessInfoByPID(uint32_t pid) {
+    ProcGuard_ProcessInfo info = { 0 };
+    info.pid = pid;
+
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc) return info;
+
+    FILETIME ftCreate, ftExit, ftKernel, ftUser;
+    if (GetProcessTimes(hProc, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
+        unsigned long long rawTime = (((unsigned long long)ftCreate.dwHighDateTime) << 32) | ftCreate.dwLowDateTime;
+        info.start_time_nano = rawTime * 100;
+    }
+
+    DWORD pathSize = sizeof(info.exe_path);
+    if (QueryFullProcessImageNameA(hProc, 0, info.exe_path, &pathSize)) {
+        // Extract basename for name field
+        char* lastSlash = strrchr(info.exe_path, '\\');
+        if (lastSlash) {
+            strncpy(info.name, lastSlash + 1, sizeof(info.name) - 1);
+        } else {
+            strncpy(info.name, info.exe_path, sizeof(info.name) - 1);
+        }
+    }
+
+    CloseHandle(hProc);
+    return info;
+}
 */
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -116,4 +146,19 @@ func GetAllProcesses() ([]ProcessInfo, error) {
 	}
 
 	return results, nil
+}
+
+// GetProcessByPID returns high-precision info for a specific PID efficiently.
+func GetProcessByPID(pid uint32) (ProcessInfo, error) {
+	cp := C.GetProcessInfoByPID(C.uint32_t(pid))
+	if cp.start_time_nano == 0 {
+		return ProcessInfo{}, fmt.Errorf("could not find or access process %d", pid)
+	}
+
+	return ProcessInfo{
+		PID:           uint32(cp.pid),
+		StartTimeNano: uint64(cp.start_time_nano),
+		Name:          C.GoString(&cp.name[0]),
+		ExePath:       C.GoString(&cp.exe_path[0]),
+	}, nil
 }

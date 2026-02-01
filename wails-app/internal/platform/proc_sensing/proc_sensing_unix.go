@@ -32,3 +32,22 @@ func GetAllProcesses() ([]ProcessInfo, error) {
 
 	return results, nil
 }
+
+// GetProcessByPID returns high-precision info for a specific PID on Unix.
+func GetProcessByPID(pid uint32) (ProcessInfo, error) {
+	p, err := process.NewProcess(int32(pid))
+	if err != nil {
+		return ProcessInfo{}, err
+	}
+
+	name, _ := p.Name()
+	exe, _ := p.Exe()
+	createTime, _ := p.CreateTime()
+
+	return ProcessInfo{
+		PID:           uint32(p.Pid),
+		StartTimeNano: uint64(createTime) * 1000000,
+		Name:          name,
+		ExePath:       exe,
+	}, nil
+}

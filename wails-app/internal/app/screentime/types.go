@@ -17,8 +17,6 @@ type ScreenTimeState struct {
 	LastUniqueKey string
 	// lastExePath is the executable path of the previously detected foreground window.
 	LastExePath string
-	// lastTitle is the title of the previously detected foreground window.
-	LastTitle string
 	// pendingDuration is the number of seconds the current window has been active since the last DB flush.
 	PendingDuration int
 	// lastFlushTime is the timestamp of the last successful database flush.
