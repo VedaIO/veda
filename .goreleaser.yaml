@@ -1,0 +1,28 @@
+project_name: procguard
+version: 2
+
+builds:
+  - id: ProcGuard
+    binary: ProcGuard
+    goos:
+      - windows
+    goarch:
+      - amd64
+    skip: true 
+    hooks:
+      pre:
+        - dir: wails-app
+          cmd: make build VERSION={{.Version}}
+    
+    artifacts:
+      - path: wails-app/build/bin/ProcGuard.exe
+        type: binary
+        name: ProcGuard.exe
+
+checksum:
+  name_template: 'checksums.txt'
+
+release:
+  github:
+    owner: infraflakes
+    name: procguard
