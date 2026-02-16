@@ -12,15 +12,18 @@ import (
 	"src/internal/platform/proc_sensing"
 )
 
+// ProcessEventSubscriber is a subscriber that tracks process start and end events.
+// It maintains in-memory state to detect when processes start and stop,
+// and writes these events to the database.
 type ProcessEventSubscriber struct {
-	logger logger.Logger
-	repo   *repository.AppRepository
-
+	logger           logger.Logger
+	repo             *repository.AppRepository
 	runningProcs     map[string]string
 	runningAppCounts map[string]int
 	sync.Mutex
 }
 
+// NewProcessEventSubscriber creates a new ProcessEventSubscriber with the given logger and repository.
 func NewProcessEventSubscriber(appLogger logger.Logger, appRepo *repository.AppRepository) *ProcessEventSubscriber {
 	return &ProcessEventSubscriber{
 		logger:           appLogger,
@@ -30,10 +33,12 @@ func NewProcessEventSubscriber(appLogger logger.Logger, appRepo *repository.AppR
 	}
 }
 
+// Name returns the subscriber name for logging purposes.
 func (s *ProcessEventSubscriber) Name() string {
 	return "ProcessEventSubscriber"
 }
 
+// OnProcessesChanged processes the current process snapshot and detects start/end events.
 func (s *ProcessEventSubscriber) OnProcessesChanged(snapshot ProcessSnapshot) {
 	currentKeys := make(map[string]bool)
 	for _, p := range snapshot.Processes {
@@ -44,6 +49,8 @@ func (s *ProcessEventSubscriber) OnProcessesChanged(snapshot ProcessSnapshot) {
 	s.logNewProcesses(snapshot.Processes)
 }
 
+// logEndedProcesses detects processes that have stopped since the last snapshot.
+// It closes their events in the database and updates internal state.
 func (s *ProcessEventSubscriber) logEndedProcesses(currentKeys map[string]bool) {
 	s.Lock()
 	defer s.Unlock()
@@ -61,6 +68,8 @@ func (s *ProcessEventSubscriber) logEndedProcesses(currentKeys map[string]bool) 
 	}
 }
 
+// logNewProcesses detects new processes that have started since the last snapshot.
+// It applies filtering rules and logs new app events to the database.
 func (s *ProcessEventSubscriber) logNewProcesses(procs []proc_sensing.ProcessInfo) {
 	s.Lock()
 	defer s.Unlock()
@@ -82,11 +91,13 @@ func (s *ProcessEventSubscriber) logNewProcesses(procs []proc_sensing.ProcessInf
 			continue
 		}
 
+		// Skip processes that should be excluded by platform-specific rules.
 		if app_filter.ShouldExclude(exePath, &p) {
 			s.runningProcs[key] = nameLower
 			continue
 		}
 
+		// Skip deduplication - only log the first instance of each app.
 		isAlreadyLogged := s.runningAppCounts[nameLower] > 0
 		if isAlreadyLogged {
 			s.runningProcs[key] = nameLower
@@ -94,10 +105,12 @@ func (s *ProcessEventSubscriber) logNewProcesses(procs []proc_sensing.ProcessInf
 			continue
 		}
 
+		// Skip processes that don't meet tracking criteria.
 		if !app_filter.ShouldTrack(exePath, &p) {
 			continue
 		}
 
+		// Log the new process event to the database.
 		parentName := fmt.Sprintf("PID: %d", p.ParentPID)
 		s.repo.LogAppEvent(name, p.PID, parentName, exePath, time.Now().Unix(), key)
 
@@ -106,6 +119,8 @@ func (s *ProcessEventSubscriber) logNewProcesses(procs []proc_sensing.ProcessInf
 	}
 }
 
+// InitializeFromDatabase restores the in-memory state from active sessions in the database.
+// This is called on startup to recover the state after a restart.
 func (s *ProcessEventSubscriber) InitializeFromDatabase() {
 	activeSessions, err := s.repo.GetActiveSessions()
 	if err != nil {
@@ -133,6 +148,8 @@ func (s *ProcessEventSubscriber) InitializeFromDatabase() {
 	}
 }
 
+// Reset clears the subscriber's internal state.
+// This is called when the user requests to clear application history.
 func (s *ProcessEventSubscriber) Reset() {
 	s.Lock()
 	defer s.Unlock()

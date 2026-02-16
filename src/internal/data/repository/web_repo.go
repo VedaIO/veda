@@ -67,7 +67,6 @@ func (r *WebRepository) GetUsageRanking(sinceTime, untilTime time.Time) ([]WebUs
 	return results, nil
 }
 
-
 // GetLogs retrieves web logs within a given time range.
 func (r *WebRepository) GetLogs(queryStr, since, until string) ([][]string, error) {
 	var sinceTime, untilTime time.Time
