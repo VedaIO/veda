@@ -54,7 +54,6 @@ async function loadWebLogs(
             timestamp,
             url,
             domain,
-            title: '', // No longer used
             iconUrl,
           };
         }),
