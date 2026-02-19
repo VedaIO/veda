@@ -9,7 +9,7 @@ all: build
 build: build-engine build-ui
 	@echo "Building Veda IO Launcher..."
 	@mkdir -p bin
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -s" -o vedaio.exe .
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -H=windowsgui -X main.Version=$(VERSION)" -o vedaio.exe .
 	upx --best --lzma vedaio.exe
 
 build-engine:
