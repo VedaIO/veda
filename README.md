@@ -81,12 +81,12 @@ Uses a publisher-subscriber architecture coordinated by `MonitoringManager`:
 
 ```bash
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
+go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
 ```
 
 ### Build Steps
 
 ```bash
-cd src
 make build
 ```
 

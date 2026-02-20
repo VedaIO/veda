@@ -2,11 +2,15 @@
 
 VERSION ?= $(shell git describe --tags --always --dirty --first-parent 2>/dev/null || echo "dev")
 
-.PHONY: all build build-engine build-ui clean
+.PHONY: all build generate build-engine build-ui clean
 
 all: build
 
-build: build-engine build-ui
+generate:
+	@echo "Generating version info..."
+	go generate
+
+build: generate build-engine build-ui
 	@echo "Building Veda IO Launcher..."
 	@mkdir -p bin
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -H=windowsgui -X main.Version=$(VERSION)" -o vedaio.exe .
@@ -28,5 +32,6 @@ clean:
 	@echo "Cleaning..."
 	rm -rf bin/
 	rm -f vedaio.exe
+	rm -f resource.syso
 	$(MAKE) -C ../veda-engine clean
 	$(MAKE) -C ../veda-ui clean

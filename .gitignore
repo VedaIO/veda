@@ -3,3 +3,4 @@ build.log
 .direnv/
 bin/
 vedaio.exe
+resource.syso

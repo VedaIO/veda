@@ -1,3 +1,5 @@
+//go:generate goversioninfo -64
+
 package main
 
 import (
