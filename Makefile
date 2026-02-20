@@ -13,8 +13,8 @@ generate:
 build: generate build-engine build-ui
 	@echo "Building Veda IO Launcher..."
 	@mkdir -p bin
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -H=windowsgui -X main.Version=$(VERSION)" -o vedaio.exe .
-	upx --best --lzma vedaio.exe
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -H=windowsgui -X main.Version=$(VERSION)" -o veda.exe .
+	upx --best --lzma veda.exe
 
 build-engine:
 	@echo "Building Veda Engine..."
@@ -31,7 +31,7 @@ build-ui:
 clean:
 	@echo "Cleaning..."
 	rm -rf bin/
-	rm -f vedaio.exe
+	rm -f veda.exe
 	rm -f resource.syso
 	$(MAKE) -C ../veda-engine clean
 	$(MAKE) -C ../veda-ui clean

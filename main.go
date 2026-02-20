@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("failed to get cache dir: %v", err)
 	}
 
-	installDir := filepath.Join(cacheDir, "vedaio", "bin")
+	installDir := filepath.Join(cacheDir, "veda", "bin")
 	if err := os.MkdirAll(installDir, 0755); err != nil {
 		log.Fatalf("failed to create install dir: %v", err)
 	}

@@ -2,5 +2,5 @@ build.log
 .vscode/
 .direnv/
 bin/
-vedaio.exe
+veda.exe
 resource.syso

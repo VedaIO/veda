@@ -20,16 +20,16 @@
     },
     "StringFileInfo": {
         "Comments": "",
-        "CompanyName": "Nixuris",
-        "FileDescription": "Veda - Screen Time Manager",
-        "FileVersion": "1.0.0.0",
-        "InternalName": "vedaio",
-        "LegalCopyright": "Copyright (c) 2025 Nixuris",
+        "CompanyName": "VedaIO",
+        "FileDescription": "Veda - Simple Blocker/Monitor for the App and Web",
+        "FileVersion": "1.4.3",
+        "InternalName": "veda",
+        "LegalCopyright": "Copyright (c) 2026 VedaIO",
         "LegalTrademarks": "",
-        "OriginalFilename": "vedaio.exe",
+        "OriginalFilename": "veda.exe",
         "PrivateBuild": "",
         "ProductName": "Veda",
-        "ProductVersion": "1.0.0.0",
+        "ProductVersion": "1.4.3",
         "SpecialBuild": ""
     },
     "VarFileInfo": {
@@ -39,5 +39,5 @@
         }
     },
     "IconPath": "",
-    "ManifestPath": "vedaio.exe.manifest"
+    "ManifestPath": "veda.exe.manifest"
 }
