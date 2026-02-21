@@ -27,7 +27,7 @@ const (
 func main() {
 	// Setup logging
 	cacheDir, _ := os.UserCacheDir()
-	logDir := filepath.Join(cacheDir, "veda-anchor", "logs")
+	logDir := filepath.Join(cacheDir, "VedaAnchor", "logs")
 	_ = os.MkdirAll(logDir, 0755)
 
 	logPath := filepath.Join(logDir, "veda-anchor_launcher.log")
