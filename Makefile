@@ -1,4 +1,4 @@
-# Makefile for Veda Anchor Anchor(Launcher)
+# Makefile for Veda Anchor (Launcher)
 
 VERSION ?= $(shell git describe --tags --always --dirty --first-parent 2>/dev/null || echo "dev")
 
@@ -11,22 +11,22 @@ generate:
 	go generate
 
 build: generate build-engine build-ui
-	@echo "Building Veda Anchor AnchorLauncher..."
+	@echo "Building Veda Anchor Launcher..."
 	@mkdir -p bin
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -H=windowsgui -X main.Version=$(VERSION)" -o veda-anchor-anchor-anchor.exe .
-	upx --best --lzma veda-anchor-anchor-anchor.exe
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -H=windowsgui -X main.Version=$(VERSION)" -o veda-anchor.exe .
+	upx --best --lzma veda-anchor.exe
 
 build-engine:
-	@echo "Building Veda Anchor AnchorEngine..."
-	$(MAKE) -C ../veda-anchor-anchor-anchor-engine build
+	@echo "Building Veda Anchor Engine..."
+	$(MAKE) -C ../veda-anchor-engine build
 	@mkdir -p bin
-	cp ../veda-anchor-anchor-anchor-engine/bin/veda-anchor-anchor-anchor-engine.exe bin/veda-anchor-anchor-anchor-engine.exe
+	cp ../veda-anchor-engine/bin/veda-anchor-engine.exe bin/veda-anchor-engine.exe
 
 build-ui:
-	@echo "Building Veda Anchor AnchorUI..."
-	$(MAKE) -C ../veda-anchor-anchor-anchor-ui build
+	@echo "Building Veda Anchor UI..."
+	$(MAKE) -C ../veda-anchor-ui build
 	@mkdir -p bin
-	cp ../veda-anchor-anchor-anchor-ui/build/bin/veda-anchor-anchor-anchor-ui.exe bin/veda-anchor-anchor-anchor-ui.exe
+	cp ../veda-anchor-ui/build/bin/veda-anchor-ui.exe bin/veda-anchor-ui.exe
 
 fmt:
 	@echo "Formatting code..."
@@ -35,7 +35,7 @@ fmt:
 clean:
 	@echo "Cleaning..."
 	rm -rf bin/
-	rm -f veda-anchor-anchor-anchor.exe
+	rm -f veda-anchor.exe
 	rm -f resource.syso
-	$(MAKE) -C ../veda-anchor-anchor-anchor-engine clean
-	$(MAKE) -C ../veda-anchor-anchor-anchor-ui clean
+	$(MAKE) -C ../veda-anchor-engine clean
+	$(MAKE) -C ../veda-anchor-ui clean
