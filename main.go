@@ -25,9 +25,19 @@ const (
 )
 
 func main() {
-	// Setup logging
-	cacheDir, _ := os.UserCacheDir()
-	logDir := filepath.Join(cacheDir, "VedaAnchor", "logs")
+	// Determine install directory
+	programFiles := os.Getenv("ProgramFiles")
+	if programFiles == "" {
+		programFiles = `C:\Program Files`
+	}
+	installDir := filepath.Join(programFiles, "VedaAnchor")
+
+	// Setup logging (Shared data root)
+	progData := os.Getenv("ProgramData")
+	if progData == "" {
+		progData = `C:\ProgramData`
+	}
+	logDir := filepath.Join(progData, "VedaAnchor", "logs")
 	_ = os.MkdirAll(logDir, 0755)
 
 	logPath := filepath.Join(logDir, "veda-anchor_launcher.log")
@@ -39,12 +49,6 @@ func main() {
 
 	log.Printf("=== VEDA ANCHOR LAUNCHER STARTED === Args: %v", os.Args)
 
-	// Determine install directory
-	programFiles := os.Getenv("ProgramFiles")
-	if programFiles == "" {
-		programFiles = `C:\Program Files`
-	}
-	installDir := filepath.Join(programFiles, "VedaAnchor")
 	enginePath := filepath.Join(installDir, "veda-anchor-engine.exe")
 	uiPath := filepath.Join(installDir, "veda-anchor-ui.exe")
 
