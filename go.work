@@ -3,5 +3,6 @@ go 1.26.0
 use (
 	.
 	../veda-anchor-engine
+	../veda-anchor-agent
 	../veda-anchor-ui
 )

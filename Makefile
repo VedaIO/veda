@@ -2,7 +2,7 @@
 
 VERSION ?= $(shell git describe --tags --always --dirty --first-parent 2>/dev/null || echo "dev")
 
-.PHONY: all build generate build-engine build-ui clean fmt
+.PHONY: all build generate build-engine build-agent build-ui clean fmt
 
 all: build
 
@@ -10,7 +10,7 @@ generate:
 	@echo "Generating version info..."
 	go generate
 
-build: generate build-engine build-ui
+build: generate build-engine build-agent build-ui
 	@echo "Building Veda Anchor Launcher..."
 	@mkdir -p bin
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-w -H=windowsgui -X main.Version=$(VERSION)" -o veda-anchor.exe .
@@ -21,6 +21,12 @@ build-engine:
 	$(MAKE) -C ../veda-anchor-engine build
 	@mkdir -p bin
 	cp ../veda-anchor-engine/bin/veda-anchor-engine.exe bin/veda-anchor-engine.exe
+
+build-agent:
+	@echo "Building Veda Anchor Agent..."
+	$(MAKE) -C ../veda-anchor-agent build
+	@mkdir -p bin
+	cp ../veda-anchor-agent/bin/veda-anchor-agent.exe bin/veda-anchor-agent.exe
 
 build-ui:
 	@echo "Building Veda Anchor UI..."
@@ -38,6 +44,7 @@ clean:
 	rm -f veda-anchor.exe
 	rm -f resource.syso
 	$(MAKE) -C ../veda-anchor-engine clean
+	$(MAKE) -C ../veda-anchor-agent clean
 	$(MAKE) -C ../veda-anchor-ui clean
 
 lint:

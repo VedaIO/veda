@@ -51,10 +51,11 @@ func main() {
 
 	enginePath := filepath.Join(installDir, "veda-anchor-engine.exe")
 	uiPath := filepath.Join(installDir, "veda-anchor-ui.exe")
+	agentPath := filepath.Join(installDir, "veda-anchor-agent.exe")
 
 	// --- Install if needed ---
 	serviceOK := isServiceInstalled()
-	binariesOK := fileExists(enginePath) && fileExists(uiPath)
+	binariesOK := fileExists(enginePath) && fileExists(uiPath) && fileExists(agentPath)
 
 	if serviceOK && binariesOK {
 		log.Println("[INSTALL] Already installed, skipping")
@@ -65,7 +66,7 @@ func main() {
 			deleteService()
 		}
 		log.Println("[INSTALL] Running install...")
-		if err := install(installDir, enginePath, uiPath); err != nil {
+		if err := install(installDir, enginePath, uiPath, agentPath); err != nil {
 			log.Fatalf("[INSTALL] Failed: %v", err)
 		}
 	}
@@ -97,7 +98,7 @@ func main() {
 }
 
 // install performs first-time setup: deploy binaries, register service, set up UI autostart.
-func install(installDir, enginePath, uiPath string) error {
+func install(installDir, enginePath, uiPath, agentPath string) error {
 	// Create install directory
 	if err := os.MkdirAll(installDir, 0755); err != nil {
 		return fmt.Errorf("create install dir: %w", err)
@@ -109,6 +110,9 @@ func install(installDir, enginePath, uiPath string) error {
 	}
 	if err := extractFile("bin/veda-anchor-ui.exe", uiPath); err != nil {
 		return fmt.Errorf("extract UI: %w", err)
+	}
+	if err := extractFile("bin/veda-anchor-agent.exe", agentPath); err != nil {
+		return fmt.Errorf("extract agent: %w", err)
 	}
 	log.Printf("[INSTALL] Binaries deployed to %s", installDir)
 
